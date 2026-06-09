@@ -364,6 +364,14 @@ svg#canvas {
 @keyframes beat {
   to { transform: scale(1.18); }
 }
+@media (max-width: 1280px) {
+  .hd-tag, .hd-tag-sep { display: none; }
+}
+@media (max-width: 1080px) {
+  .toolbar { gap: 8px; }
+  .btn { padding: 6px 10px; font-size: 12px; }
+  .ctrl-group { gap: 4px; }
+}
 </style>
 </head>
 <body>
@@ -374,7 +382,7 @@ svg#canvas {
     <div class="hd-title">Lloyd's Algorithm for <em>K-Means</em></div>
     <div class="hd-sep"></div>
     <div class="hd-tag">Unsupervised Learning</div>
-    <div class="hd-sep"></div>
+    <div class="hd-sep hd-tag-sep"></div>
 
     <div class="toolbar">
       <div class="ctrl-group">
