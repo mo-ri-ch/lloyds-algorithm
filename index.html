@@ -398,6 +398,7 @@ svg#canvas {
         </div>
       </div>
       <div class="hd-sep"></div>
+      <button class="btn" id="newDatasetBtn">✦ New Dataset</button>
       <button class="btn" id="resetBtn">↺ Reset</button>
       <button class="btn" id="stepBtn">▶ Step</button>
       <button class="btn primary" id="runBtn">⚡ Run all</button>
@@ -687,20 +688,33 @@ function runAll(){
   tick();
 }
 
-function reset(){
+function reset(keepDataset = false){
   if(animTimer){clearTimeout(animTimer);animTimer=null;}
   iteration=0;converged=false;
   K=parseInt(document.getElementById('kSlider').value);
   N=parseInt(document.getElementById('nSlider').value);
-  makePoints();initCentroids();
+  
+  let regenerated = false;
+  if (!keepDataset || points.length !== N) {
+    makePoints();
+    regenerated = true;
+  }
+  
+  initCentroids();
   setPhase('init');draw();
   document.getElementById('convergeBanner').classList.remove('show');
-  addLog(`Reset — K=${K}, ${N} points generated.`,'reset');
+  
+  if (regenerated) {
+    addLog(`Reset — K=${K}, ${N} points generated.`,'reset');
+  } else {
+    addLog(`Reset centroids — kept existing ${N} points.`,'reset');
+  }
 }
 
-document.getElementById('kSlider').addEventListener('input',e=>{document.getElementById('kVal').textContent=e.target.value;reset();});
-document.getElementById('nSlider').addEventListener('input',e=>{document.getElementById('nVal').textContent=e.target.value;reset();});
-document.getElementById('resetBtn').addEventListener('click',reset);
+document.getElementById('kSlider').addEventListener('input',e=>{document.getElementById('kVal').textContent=e.target.value;reset(false);});
+document.getElementById('nSlider').addEventListener('input',e=>{document.getElementById('nVal').textContent=e.target.value;reset(false);});
+document.getElementById('newDatasetBtn').addEventListener('click',()=>reset(false));
+document.getElementById('resetBtn').addEventListener('click',()=>reset(true));
 document.getElementById('stepBtn').addEventListener('click',stepOnce);
 document.getElementById('runBtn').addEventListener('click',runAll);
 document.querySelectorAll('.speed-btn').forEach(b=>{
