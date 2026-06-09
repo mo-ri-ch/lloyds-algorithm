@@ -400,6 +400,7 @@ svg#canvas {
       <div class="hd-sep"></div>
       <button class="btn" id="newDatasetBtn">✦ New Dataset</button>
       <button class="btn" id="resetBtn">↺ Reset</button>
+      <button class="btn" id="backBtn" disabled>◀ Prev</button>
       <button class="btn" id="stepBtn">▶ Step</button>
       <button class="btn primary" id="runBtn">⚡ Run all</button>
     </div>
@@ -481,7 +482,7 @@ const COLORS_L = ['rgba(91,156,246,.13)','rgba(224,123,84,.13)','rgba(94,196,122
 const W=760, H=520, PAD=40;
 const ns='http://www.w3.org/2000/svg';
 
-let K=3, N=60, points=[], centroids=[], assignment=[], iteration=0, converged=false, animTimer=null, speed=420, phase='init';
+let K=3, N=60, points=[], centroids=[], assignment=[], iteration=0, converged=false, animTimer=null, speed=420, phase='init', history=[];
 
 const svg=document.getElementById('canvas');
 
@@ -589,6 +590,7 @@ function draw(){
   updateLegend();
   updateTable();
   updateMetrics();
+  document.getElementById('backBtn').disabled = (history.length === 0);
 }
 
 function updateLegend(){
@@ -662,6 +664,7 @@ function addLog(msg,cls=''){
 
 function stepOnce(){
   if(converged){addLog('Already converged. Reset to continue.','reset');return;}
+  history.push(getSnapshot());
   if(iteration===0){
     assign(); iteration=1;
     setPhase('assign'); draw();
@@ -688,8 +691,38 @@ function runAll(){
   tick();
 }
 
+function getSnapshot(){
+  return {
+    centroids: centroids.map(c=>({x:c.x,y:c.y})),
+    assignment: [...assignment],
+    iteration: iteration,
+    converged: converged,
+    phase: phase,
+    logHTML: document.getElementById('stepLog').innerHTML
+  };
+}
+
+function stepBack(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null;}
+  if(history.length===0) return;
+  const prev=history.pop();
+  centroids=prev.centroids;
+  assignment=prev.assignment;
+  iteration=prev.iteration;
+  converged=prev.converged;
+  setPhase(prev.phase);
+  document.getElementById('stepLog').innerHTML=prev.logHTML;
+  if(!converged){
+    document.getElementById('convergeBanner').classList.remove('show');
+  } else {
+    document.getElementById('convergeBanner').classList.add('show');
+  }
+  draw();
+}
+
 function reset(keepDataset = false){
   if(animTimer){clearTimeout(animTimer);animTimer=null;}
+  history = [];
   iteration=0;converged=false;
   K=parseInt(document.getElementById('kSlider').value);
   N=parseInt(document.getElementById('nSlider').value);
@@ -715,6 +748,7 @@ document.getElementById('kSlider').addEventListener('input',e=>{document.getElem
 document.getElementById('nSlider').addEventListener('input',e=>{document.getElementById('nVal').textContent=e.target.value;reset(false);});
 document.getElementById('newDatasetBtn').addEventListener('click',()=>reset(false));
 document.getElementById('resetBtn').addEventListener('click',()=>reset(true));
+document.getElementById('backBtn').addEventListener('click',stepBack);
 document.getElementById('stepBtn').addEventListener('click',stepOnce);
 document.getElementById('runBtn').addEventListener('click',runAll);
 document.querySelectorAll('.speed-btn').forEach(b=>{
